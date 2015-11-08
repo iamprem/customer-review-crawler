@@ -1,3 +1,4 @@
+import java.io.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -11,8 +12,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
@@ -71,6 +70,11 @@ public class Item {
 				maxpage = Collections.max(pagenum);
 			}
 
+			//Open file to write output
+			File file = new File(System.getProperty("user.home")+"/Desktop/"+this.itemID+".txt");
+			file.createNewFile();
+			BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
+
 			// collect review from each of the review pages;
 			for (int p = 1; p <= maxpage; p = p + 1) {
 				url = "http://www.amazon.com/product-reviews/"
@@ -79,27 +83,70 @@ public class Item {
 						+ p;
 				org.jsoup.nodes.Document reviewpage = null;
 				reviewpage = Jsoup.connect(url).timeout(10*1000).get();
-				if (reviewpage.select("table[id=productReviews]").isEmpty()) {
+				if (reviewpage.select("div.a-section.review").isEmpty()) {
 					System.out.println(itemID + " " + "no reivew");
 				} else {
-					Element reviewsHTML = reviewpage.select(
-							"table[id=productReviews]").first();
-					List<String> reviewBlocks = new ArrayList<String>(
-							Arrays.asList(reviewsHTML.toString().split(
-									"<!-- BOUNDARY -->")));
-					reviewBlocks.remove(0);
-					for (String reviewBlock : reviewBlocks) {
-						Review theReview = cleanReviewBlock(reviewBlock);
-						this.addReview(theReview);
+					Elements reviewsHTML = reviewpage.select("div.a-section.review");
+					Review review;
+					for (Element reviewHTML : reviewsHTML) {
+
+						review = this.cleanReviewBlock(reviewHTML);
+						writeReviewsToFile(bw, review);
+
 					}
+					bw.flush();
 				}
 
 			}
+			bw.close();
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.out.println(itemID + " " + "Exception" + " " + e.getClass());
 		}
 
+	}
+
+	public Review cleanReviewBlock(Element reviewHTML){
+
+		String reviewID = reviewHTML.id();
+		int totalVotes = 0, posVotes = 0;
+		int rating = 0;
+		String reviewTitle = reviewHTML.select("div.a-row").get(1).select("a.review-title").text();
+		String reviewText = reviewHTML.select("dtemiv.a-row.review-data > span.a-size-base.review-text").text();
+		String helpfulVotes = reviewHTML.select("div.a-row.helpful-votes-count").text();
+		String stars = reviewHTML.select("div.a-row").get(1).select("span.a-icon-alt").text();
+
+		//Get vote counts for each review
+		helpfulVotes = helpfulVotes.replace(",", "");
+		if (helpfulVotes.length() != 0) {
+			posVotes = Integer.parseInt(helpfulVotes.split(" ")[0]);
+			totalVotes = Integer.parseInt(helpfulVotes.split(" ")[2]);
+		}
+
+		//Get ratings
+		Pattern pattern = Pattern.compile("[\\d]");
+		Matcher matcher = pattern.matcher(stars);
+		if (matcher.find()){
+			rating = Integer.parseInt(matcher.group(0));
+		}
+
+		Review thereview = new Review(this.itemID, reviewID, "", "", reviewTitle, rating, 5, posVotes,
+				totalVotes, false, false, null, reviewText);
+		return thereview;
+
+	}
+
+	public boolean writeReviewsToFile(BufferedWriter bw, Review review){
+
+		try {
+			bw.write(review.reviewID + "\t" + review.rating + "\t" + review.title + "\t"
+					+ review.helpfulVotes + "\t" + review.totalVotes + "\t" + review.content + "\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return true;
 	}
 
 	/**
