@@ -19,6 +19,12 @@ import org.joda.time.DateTime;
  */
 @SuppressWarnings("unused")
 public class GetASINbyNode implements GetID{
+
+    public ItemList items;
+    public String nodeid;
+    public int from;
+    public int to;
+
 	/**
 	 * Example (Tablet PCs):
 	 * 	getIDsByNode getid = new getIDsByNode("541966%2C1232597011",1,300);
@@ -42,13 +48,18 @@ public class GetASINbyNode implements GetID{
 	public void getIDList() throws IOException{
 		for (int i = from; i <= to; i++) {
 			String thepage = readWebPage("http://www.amazon.com/gp/aw/s/ref=is_pg_2_1?n="+nodeid+"&p="+i+"&p_72=1248882011&s=salesrank");
-			//System.out.println(thepage);
 			DateTime dt = new DateTime();
 			System.out.println(dt+ "Page "+i);
 			String patternString = "(<a href=\"/gp/aw/d/)(\\S{10})(/ref=mp_s_a)";
 			Pattern pattern = Pattern.compile(patternString);
 			Matcher matcher = pattern.matcher(thepage);
+			/*
 			while (matcher.find()) {
+			items.addItem(matcher.group(2));
+			}
+			*/
+			//Add only one per page to avoid similar products to the list
+			if (matcher.find()){
 				items.addItem(matcher.group(2));
 			}
 		}
@@ -79,8 +90,5 @@ public class GetASINbyNode implements GetID{
 		httpclient.getConnectionManager().shutdown();
 		return responseBody;
 	}
-	private ItemList items;
-	private String nodeid;
-	private int from;
-	private int to;
+
 }

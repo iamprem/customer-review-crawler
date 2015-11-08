@@ -63,11 +63,11 @@ public class Item {
 				ArrayList<Integer> pagenum = new ArrayList<Integer>();
 				for (Element link : pagelinks) {
 					try {
-						pagenum.add(Integer.parseInt(link.text()));
+						pagenum.add(Integer.parseInt(link.text().replace(",","")));
 					} catch (NumberFormatException nfe) {
 					}
 				}
-				maxpage = Collections.max(pagenum);
+				maxpage = Collections.max(pagenum) > 300 ? 300:Collections.max(pagenum);
 			}
 
 			//Open file to write output
@@ -82,6 +82,7 @@ public class Item {
 						+ "/?showViewpoints=0&sortBy=byRankDescending&pageNumber="
 						+ p;
 				org.jsoup.nodes.Document reviewpage = null;
+                Thread.sleep(500);
 				reviewpage = Jsoup.connect(url).timeout(10*1000).get();
 				if (reviewpage.select("div.a-section.review").isEmpty()) {
 					System.out.println(itemID + " " + "no reivew");
@@ -92,6 +93,7 @@ public class Item {
 
 						review = this.cleanReviewBlock(reviewHTML);
 						writeReviewsToFile(bw, review);
+						this.addReview(review);
 
 					}
 					bw.flush();
@@ -113,7 +115,7 @@ public class Item {
 		int totalVotes = 0, posVotes = 0;
 		int rating = 0;
 		String reviewTitle = reviewHTML.select("div.a-row").get(1).select("a.review-title").text();
-		String reviewText = reviewHTML.select("dtemiv.a-row.review-data > span.a-size-base.review-text").text();
+		String reviewText = reviewHTML.select("div.a-row.review-data > span.a-size-base.review-text").text();
 		String helpfulVotes = reviewHTML.select("div.a-row.helpful-votes-count").text();
 		String stars = reviewHTML.select("div.a-row").get(1).select("span.a-icon-alt").text();
 
@@ -132,7 +134,7 @@ public class Item {
 		}
 
 		Review thereview = new Review(this.itemID, reviewID, "", "", reviewTitle, rating, 5, posVotes,
-				totalVotes, false, false, null, reviewText);
+				totalVotes, false, false, new Date(), reviewText);
 		return thereview;
 
 	}
