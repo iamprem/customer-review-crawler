@@ -26,10 +26,12 @@ public class crawler {
 
         for (String productId : productIds){
             Item product = new Item(productId);
+            product.fetchInfo();
             product.fetchReview();
         }
 		//example: write all reviews for Samsung Tab 3 to a SQLite database
 		Item samsungTab3 = new Item("B00D02AGU4");
+        samsungTab3.fetchInfo();
 		samsungTab3.fetchReview();
 		samsungTab3.writeReviewsToDatabase(System.getProperty("user.home")+"/Desktop/reviewtest.db", false);
 	}

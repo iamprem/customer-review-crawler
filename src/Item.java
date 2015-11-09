@@ -38,6 +38,13 @@ import org.jsoup.select.Elements;
 
 
 public class Item {
+
+    public String itemID;
+    public String itemName;
+    public double price;
+    public int reveiwsCount;
+    public ArrayList<Review> reviews;
+
 	public Item(String theitemid) {
 		itemID = theitemid;
 		reviews = new ArrayList<Review>();
@@ -67,6 +74,7 @@ public class Item {
 					} catch (NumberFormatException nfe) {
 					}
 				}
+                //Taking only first 3000 reviews if there are more than that
 				maxpage = Collections.max(pagenum) > 300 ? 300:Collections.max(pagenum);
 			}
 
@@ -109,6 +117,37 @@ public class Item {
 
 	}
 
+    /**
+     * Fetch the product/item details such as item name, item price.
+     * @author Prem
+     */
+    public void fetchInfo(){
+        String url = "http://www.amazon.com/gp/aw/s/?k="+this.itemID;
+        try {
+
+            org.jsoup.nodes.Document productPage = null;
+            productPage = Jsoup.connect(url).timeout(10*1000).get();
+            Element productBlock = productPage.select("form").get(1);
+            if (productBlock != null){
+                this.itemName = productBlock.select("a").get(0).text();
+                this.price = Double.parseDouble(productPage.select("form").get(1).select("font > font > b").first().text().substring(1));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(itemID + " " + "Exception" + " " + e.getClass());
+        }
+    }
+
+    /**
+     * [FOR NEW UPDATED PAGE LAYOUT]Clean the HTML block that contains the reivew
+     * Note: The other method with this name is for older page layout
+     *
+     * @param reviewHTML
+     *              An HTML Element that contains a single reveiw
+     * @return
+     * @author Prem
+     */
 	public Review cleanReviewBlock(Element reviewHTML){
 
 		String reviewID = reviewHTML.id();
@@ -139,6 +178,15 @@ public class Item {
 
 	}
 
+    /**
+     * Writes the review to a text file with tab separation
+     * @param bw
+     *          a Buffered Writer to write the reviews to a file
+     * @param review
+     *          a Review object that contains necessary information
+     * @return
+     * @author Prem
+     */
 	public boolean writeReviewsToFile(BufferedWriter bw, Review review){
 
 		try {
@@ -395,6 +443,4 @@ public class Item {
 		return InfoTagMap;
 	}
 
-	public String itemID;
-	public ArrayList<Review> reviews;
 }
