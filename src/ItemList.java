@@ -59,8 +59,8 @@ public class ItemList {
 	 * @throws SQLException
 	 */
 	public void writeReviewsToDatabase(String database, boolean API) throws IOException,
-			InvalidKeyException, ClassNotFoundException,
-			NoSuchAlgorithmException, ParseException, SQLException {
+            InvalidKeyException, ClassNotFoundException,
+            NoSuchAlgorithmException, ParseException, SQLException, InterruptedException {
 		for (String id : itemIDs) {
 			Item item = new Item(id);
 			item.fetchReview();
