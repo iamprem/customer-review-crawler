@@ -139,7 +139,8 @@ public class Item {
             Element productBlock = productPage.select("form").get(1);
             if (productBlock != null) {
                 this.itemName = productBlock.select("a").get(0).text();
-                this.price = Double.parseDouble(productPage.select("form").get(1).select("font > font > b").first().text().substring(1));
+                String price = productPage.select("form").get(1).select("b").first().text().substring(1);
+                this.price = Double.parseDouble(price.replace(",",""));
             }
 
         } catch (Exception e) {
