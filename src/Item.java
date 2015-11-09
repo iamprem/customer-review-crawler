@@ -56,8 +56,12 @@ public class Item {
 
 	/**
 	 * Fetch all reviews for the item from Amazon.com
+     *
+     * Modified by
+     * @author Prem
 	 */
 	public void fetchReview() {
+        int limit = 10; //Number of pages from which reviews to be retrieved
 		String url = "http://www.amazon.com/product-reviews/" + itemID
 				+ "/?showViewpoints=0&sortBy=byRankDescending&pageNumber=" + 1;
 		try {
@@ -74,14 +78,9 @@ public class Item {
 					} catch (NumberFormatException nfe) {
 					}
 				}
-                //Taking only first 3000 reviews if there are more than that
-				maxpage = Collections.max(pagenum) > 300 ? 300:Collections.max(pagenum);
+                //Taking only first limit*10 reviews if there are more than that
+				maxpage = Collections.max(pagenum) > limit ? limit:Collections.max(pagenum);
 			}
-
-			//Open file to write output
-			File file = new File(System.getProperty("user.home")+"/Desktop/"+this.itemID+".txt");
-			file.createNewFile();
-			BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
 
 			// collect review from each of the review pages;
 			for (int p = 1; p <= maxpage; p = p + 1) {
@@ -98,18 +97,11 @@ public class Item {
 					Elements reviewsHTML = reviewpage.select("div.a-section.review");
 					Review review;
 					for (Element reviewHTML : reviewsHTML) {
-
 						review = this.cleanReviewBlock(reviewHTML);
-						writeReviewsToFile(bw, review);
 						this.addReview(review);
-
 					}
-					bw.flush();
 				}
-
 			}
-			bw.close();
-
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println(itemID + " " + "Exception" + " " + e.getClass());
@@ -178,26 +170,48 @@ public class Item {
 
 	}
 
+
     /**
-     * Writes the review to a text file with tab separation
-     * @param bw
-     *          a Buffered Writer to write the reviews to a file
-     * @param review
-     *          a Review object that contains necessary information
-     * @return
+     * Write reviews of a product to its corresponding file named by its itemID
+     *
+     * @param file
+     *          Input file to which the reviews will be written
      * @author Prem
      */
-	public boolean writeReviewsToFile(BufferedWriter bw, Review review){
+    public void writeReviewsToFile(File file){
 
-		try {
-			bw.write(review.reviewID + "\t" + review.rating + "\t" + review.title + "\t"
-					+ review.helpfulVotes + "\t" + review.totalVotes + "\t" + review.content + "\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+        BufferedWriter bw = null;
+        try {
+            bw = new BufferedWriter(new FileWriter(file, true));
+            for (Review review : this.reviews){
+                bw.write(review.reviewID + "\t" + review.rating + "\t" + review.title + "\t"
+                        + review.helpfulVotes + "\t" + review.totalVotes + "\t" + review.content + "\n");
+            }
+            bw.flush();
+            bw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-		return true;
-	}
+    /**
+     * Write itemInfo of a product to itemsInfo file
+     *
+     * @param file
+     * @author Prem
+     */
+    public void writeItemInfoToFile(File file){
+
+        BufferedWriter bw = null;
+        try {
+            bw = new BufferedWriter(new FileWriter(file, true));
+            bw.write(this.itemID + "\t" + this.itemName + "\t" + this.price + "\n");
+            bw.flush();
+            bw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 	/**
 	 * cleans the html block that contains a review

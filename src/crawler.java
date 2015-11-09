@@ -1,3 +1,4 @@
+import java.io.File;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -28,12 +29,18 @@ public class crawler {
             Item product = new Item(productId);
             product.fetchInfo();
             product.fetchReview();
+
+            //Write fetched info and reviews to files
+            File reviewFile = new File(System.getProperty("user.home")+"/Desktop/Reviews/"+product.itemID+".txt");
+            File itemInfoFile = new File(System.getProperty("user.home")+"/Desktop/ItemInfo/itemInfo.txt");
+            itemInfoFile.getParentFile().mkdir();
+            itemInfoFile.createNewFile();
+            reviewFile.getParentFile().mkdir();
+            reviewFile.createNewFile();
+            product.writeItemInfoToFile(itemInfoFile);
+            product.writeReviewsToFile(reviewFile);
         }
-		//example: write all reviews for Samsung Tab 3 to a SQLite database
-		Item samsungTab3 = new Item("B00D02AGU4");
-        samsungTab3.fetchInfo();
-		samsungTab3.fetchReview();
-		samsungTab3.writeReviewsToDatabase(System.getProperty("user.home")+"/Desktop/reviewtest.db", false);
+
 	}
 
 }
