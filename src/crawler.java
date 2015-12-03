@@ -21,7 +21,7 @@ public class crawler {
 			ClassNotFoundException, SQLException, InvalidKeyException,
 			NoSuchAlgorithmException, InterruptedException {
 
-		GetASINbyNode asins = new GetASINbyNode("541966%2C1232597011",1,3);
+		GetASINbyNode asins = new GetASINbyNode("541966%2C1232597011",26,31);
         asins.getIDList();
         Set<String> productIds = asins.items.returnIDsAsSet();
 

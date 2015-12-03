@@ -63,17 +63,28 @@ public class Item {
      * @author Prem
      */
     public void fetchReview() throws InterruptedException {
-        int limit = Integer.MAX_VALUE; //Number of pages from which reviews to be retrieved
+        int limit = 100; //Number of pages from which reviews to be retrieved
         int retry = 0;
         String url = "http://www.amazon.com/product-reviews/" + itemID
                 + "/?showViewpoints=0&sortBy=byRankDescending&pageNumber=" + 1;
 
         // Get the max number of review pages;
         org.jsoup.nodes.Document reviewpage1 = null;
-        try {
-            reviewpage1 = Jsoup.connect(url).timeout(10 * 1000).get();
-        } catch (IOException e) {
-            e.printStackTrace();
+        retry = 0;
+        while (true) {
+            try {
+                reviewpage1 = Jsoup.connect(url).timeout(10 * 1000).get();
+                break;
+            } catch (IOException e) {
+                if (retry < 3) {
+                    retry++;
+                    Thread.sleep(60000);
+                    System.out.println(retry + "-Retry after 1 minute. Waiting... for maxpage");
+                } else {
+                    e.printStackTrace();
+                    break;
+                }
+            }
         }
         int maxpage = 1;
         Elements pagelinks = reviewpage1.select("a[href*=pageNumber=]");
